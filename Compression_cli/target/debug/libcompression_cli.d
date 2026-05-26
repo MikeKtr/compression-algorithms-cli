@@ -1,0 +1,1 @@
+C:\Users\micha\Desktop\Rust\compression_cli\target\debug\libcompression_cli.rlib: C:\Users\micha\Desktop\Rust\compression_cli\src\algorithms\mod.rs C:\Users\micha\Desktop\Rust\compression_cli\src\algorithms\rle.rs C:\Users\micha\Desktop\Rust\compression_cli\src\lib.rs
