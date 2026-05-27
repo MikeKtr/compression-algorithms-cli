@@ -1,6 +1,6 @@
-C:\Users\micha\Desktop\Rust\compression_cli\target\debug\deps\compression_cli.d: src\main.rs
+C:\Users\micha\Desktop\RustPojekt\Compression_cli\target\debug\deps\compression_cli.d: src\main.rs
 
-C:\Users\micha\Desktop\Rust\compression_cli\target\debug\deps\compression_cli.exe: src\main.rs
+C:\Users\micha\Desktop\RustPojekt\Compression_cli\target\debug\deps\compression_cli.exe: src\main.rs
 
 src\main.rs:
 
