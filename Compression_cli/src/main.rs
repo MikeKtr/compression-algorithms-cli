@@ -1,11 +1,12 @@
 use clap::{Parser, Subcommand, ValueEnum};
-use std::fs::File;
-use std::fs::{metadata, Metadata};
-use std::io::Write;
-use std::path::PathBuf;
-
 use compression_cli::algorithms::rle::RleCompression;
 use compression_cli::algorithms::traits::CompressionAlgorithm;
+use compression_cli::audio;
+
+use std::fs::File;
+use std::fs::{Metadata, metadata};
+use std::io::Write;
+use std::path::PathBuf;
 
 //Tutaj dodajesz typy kompresowania
 #[derive(ValueEnum, Clone, Debug)]
@@ -105,9 +106,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Commands::Audio {
             input,
             output,
-            compression_algo,
+            compression_algo: _,
             decompress,
-        } => {}
+        } => {
+            audio::process_audio(&input, &output, decompress);
+        }
     }
 
     Ok(())
