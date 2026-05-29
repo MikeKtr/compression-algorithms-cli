@@ -2,9 +2,9 @@ use clap::{Parser, Subcommand, ValueEnum};
 use compression_cli::algorithms::rle::RleCompression;
 use compression_cli::algorithms::traits::CompressionAlgorithm;
 use compression_cli::audio;
+use compression_cli::utils;
 
 use std::fs::File;
-use std::fs::{Metadata, metadata};
 use std::io::Write;
 use std::path::PathBuf;
 
@@ -51,11 +51,6 @@ pub enum Commands {
     },
 }
 
-fn get_file_size(file_path: &std::path::Path) -> Result<u64, std::io::Error> {
-    let md = std::fs::metadata(file_path)?;
-    Ok(md.len())
-}
-
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = CliArgs::parse();
 
@@ -84,33 +79,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             output_file.flush()?;
 
-            let len_input: u64 = get_file_size(&input)?;
-            let len_output: u64 = get_file_size(&output)?;
-
-            println!("");
-            println!("------------------------------------------------------");
-
-            println!(
-                "Udało się skompresować plik przy użyciu algorytmu {:?}",
-                compression_algo
-            );
-            println!("------------------------------------------------------");
-            println!("Początkowy rozmiar pliku: {} b", len_input);
-            println!("Końcowy rozmiar pliku: {} b", len_output);
-            println!(
-                "Różnica rozmiarów: {}%",
-                (len_input as f64 / len_output as f64) * 100.0
-            );
-            println!("------------------------------------------------------");
+            utils::print_stats(&input, &output, Some(&format!("{:?}", compression_algo)));
         }
         Commands::Audio {
             input,
             output,
-            compression_algo: _,
+            compression_algo,
             decompress,
-        } => {
-            audio::process_audio(&input, &output, decompress);
-        }
+        } => match compression_algo {
+            CompressionAlgo::Rle => {
+                let algo = RleCompression;
+                audio::process_audio(&input, &output, decompress, &algo);
+            }
+        },
     }
 
     Ok(())

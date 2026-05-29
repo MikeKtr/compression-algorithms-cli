@@ -2,7 +2,7 @@ use textplots::{Chart, Plot, Shape};
 
 // wykres ascii audio
 pub fn show_waveform(samples: &[i16]) {
-    const NUM_POINTS: usize = 300;
+    const NUM_POINTS: usize = 1300;
 
     let step = std::cmp::max(1, samples.len() / NUM_POINTS);
 

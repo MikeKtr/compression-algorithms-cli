@@ -1,12 +1,14 @@
 const COMPRESSION_FACTOR: i16 = 1000;
+// const COMPRESSION_FACTOR: i16 = 2000;
 
+// potrzebne, zeby RLE mialo sens, cos w stylu zaokrąglenia wartosci dzwiekow
 pub fn quantize_samples(samples: &mut [i16]) {
     for sample in samples.iter_mut() {
         *sample = (*sample / COMPRESSION_FACTOR) * COMPRESSION_FACTOR;
     }
 }
 
-// [10, 12, 14, 16] -> [10, 2, 2, 2]. przez to mozna robic RLE
+// [10, 12, 14, 16] -> [10, 2, 2, 2]; przez to mozna robic RLE
 pub fn delta_encode(samples: &[i16]) -> Vec<i16> {
     let mut encoded = Vec::with_capacity(samples.len());
 
