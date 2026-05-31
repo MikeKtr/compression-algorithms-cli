@@ -6,6 +6,7 @@ pub struct LzwCompression;
 
 impl CompressionAlgorithm for LzwCompression {
     fn compress(&self, source: &mut dyn Read, destination: &mut dyn Write) -> std::io::Result<()> {
+        let source_reader = std::io::BufReader::new(source);
         let mut writer = BufWriter::new(destination);
 
         let mut dict: HashMap<Vec<u8>, u32> = HashMap::new();
@@ -15,12 +16,10 @@ impl CompressionAlgorithm for LzwCompression {
         }
         let mut next_dict_val: u32 = 256;
 
-        let mut input = Vec::new();
-        source.read_to_end(&mut input)?;
-
         let mut current: Vec<u8> = Vec::new();
 
-        for &byte in &input {
+        for byte_result in source_reader.bytes() {
+            let byte = byte_result?;
             let mut extended = current.clone();
             extended.push(byte);
 
@@ -52,25 +51,21 @@ impl CompressionAlgorithm for LzwCompression {
         destination: &mut dyn Write,
     ) -> std::io::Result<()> {
         let mut writer = BufWriter::new(destination);
-
-        let mut input = Vec::new();
-        source.read_to_end(&mut input)?;
-
-        let codes: Vec<u32> = input
-            .chunks_exact(4)
-            .map(|chunk| u32::from_le_bytes([chunk[0], chunk[1], chunk[2], chunk[3]]))
-            .collect();
-
-        if codes.is_empty() {
-            return Ok(());
-        }
-
         let mut dict: Vec<Vec<u8>> = (0u32..256).map(|i| vec![i as u8]).collect();
 
-        let mut previous = dict[codes[0] as usize].clone();
+        let mut buf = [0u8; 4];
+
+        if source.read_exact(&mut buf).is_err() {
+            return Ok(());
+        }
+        let first_code = u32::from_le_bytes(buf);
+
+        let mut previous = dict[first_code as usize].clone();
         writer.write_all(&previous)?;
 
-        for &code in &codes[1..] {
+        while let Ok(_) = source.read_exact(&mut buf) {
+            let code = u32::from_le_bytes(buf);
+
             let entry = if (code as usize) < dict.len() {
                 dict[code as usize].clone()
             } else {
