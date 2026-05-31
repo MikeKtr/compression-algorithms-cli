@@ -1,5 +1,5 @@
-const COMPRESSION_FACTOR: i16 = 1000;
-// const COMPRESSION_FACTOR: i16 = 2000;
+// const COMPRESSION_FACTOR: i16 = 1000;
+const COMPRESSION_FACTOR: i16 = 2000;
 
 // potrzebne, zeby RLE mialo sens, cos w stylu zaokrąglenia wartosci dzwiekow
 pub fn quantize_samples(samples: &mut [i16]) {

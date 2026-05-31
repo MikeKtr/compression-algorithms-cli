@@ -1,4 +1,5 @@
 use clap::{Parser, Subcommand, ValueEnum};
+use compression_cli::algorithms::lzw::LzwCompression;
 use compression_cli::algorithms::rle::RleCompression;
 use compression_cli::algorithms::traits::CompressionAlgorithm;
 use compression_cli::audio;
@@ -12,6 +13,7 @@ use std::path::PathBuf;
 #[derive(ValueEnum, Clone, Debug)]
 pub enum CompressionAlgo {
     Rle,
+    Lzw,
 }
 
 #[derive(Debug, Parser)]
@@ -75,11 +77,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         algo.compress(&mut input_file, &mut output_file)?;
                     }
                 }
+                CompressionAlgo::Lzw => {
+                    let algo = LzwCompression;
+                    if decompress {
+                        algo.decompress(&mut input_file, &mut output_file)?;
+                    } else {
+                        algo.compress(&mut input_file, &mut output_file)?;
+                    }
+                }
             }
 
             output_file.flush()?;
-
-            utils::print_stats(&input, &output, Some(&format!("{:?}", compression_algo)));
+            if !decompress {
+                utils::print_stats(&input, &output, Some(&format!("{:?}", compression_algo)));
+            }
         }
         Commands::Audio {
             input,
@@ -89,6 +100,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         } => match compression_algo {
             CompressionAlgo::Rle => {
                 let algo = RleCompression;
+                audio::process_audio(&input, &output, decompress, &algo);
+            }
+            CompressionAlgo::Lzw => {
+                let algo = LzwCompression;
                 audio::process_audio(&input, &output, decompress, &algo);
             }
         },
