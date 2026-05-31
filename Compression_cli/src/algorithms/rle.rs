@@ -1,13 +1,13 @@
 use std::io::{Read,Write,BufReader,BufWriter};
-use crate::algorithms::traits::CompressionAlgorithm;
+use crate::algorithms::traits::{CompressionAlgorithm,ReadSeek};
 
 
 pub struct RleCompression;
 
 impl CompressionAlgorithm for RleCompression{
 
-	fn compress(&self,source: &mut dyn Read,destination : &mut dyn Write) -> std::io::Result<()>{
-		let mut reader = BufReader::new(source);
+	fn compress(&self,source: &mut dyn ReadSeek,destination : &mut dyn Write) -> std::io::Result<()>{
+		let reader = BufReader::new(source);
 		let mut writer = BufWriter::new(destination);
 
 		let mut current_byte : Option<u8> = None;
@@ -38,7 +38,7 @@ impl CompressionAlgorithm for RleCompression{
 		Ok(())
 	}
 
-	fn decompress(&self,source: &mut dyn  Read, destination : &mut dyn Write) -> std::io::Result<()>{
+	fn decompress(&self,source: &mut dyn  ReadSeek, destination : &mut dyn Write) -> std::io::Result<()>{
 		let mut reader = BufReader::new(source);
 		let mut writer = BufWriter::new(destination);
 
@@ -48,8 +48,8 @@ impl CompressionAlgorithm for RleCompression{
 			let number_byte = buffer[0];
 			let letter_byte = buffer[1];
 			
-			for i in 0..number_byte{
-				writer.write_all(&[letter_byte]);
+			for _i in 0..number_byte{
+				let _ = writer.write_all(&[letter_byte]);
 			}
 
 		}

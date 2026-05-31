@@ -2,17 +2,19 @@
 	use std::path::PathBuf;
 	use clap::{Parser, ValueEnum};
 	use std::fs::File;
-	use std::fs::{Metadata,metadata};
+	
 	use std::io::Write;
 	
 	use compression_cli::algorithms::traits::CompressionAlgorithm;
 	use compression_cli::algorithms::rle::RleCompression;
+	use compression_cli::algorithms::huffmanTree::HuffmanCompression;
 
 
 	//Tutaj dodajesz typy kompresowania
 	#[derive(ValueEnum,Clone,Debug)]
 	pub enum CompressionAlgo{
-		Rle
+		Rle,
+		HuffmanCompression
 	}
 
 	#[derive(Debug,Parser)]
@@ -58,6 +60,15 @@
 					algo.compress(&mut input_file, &mut output_file)?;
 				}
 			}
+			CompressionAlgo::HuffmanCompression => {
+				let algo = HuffmanCompression;
+				if args.decompress{
+					algo.decompress(&mut input_file, &mut output_file)?;
+				}
+				else{
+					algo.compress(&mut input_file, &mut output_file)?;
+				}
+			}
 		}
 		
 		output_file.flush()?;
@@ -72,7 +83,7 @@
 		println!("------------------------------------------------------");
 		println!("Początkowy rozmiar pliku: {} b",len_input);
 		println!("Końcowy rozmiar pliku: {} b",len_output);
-		println!("Różnica rozmiarów: {}%",(len_input as f64 / len_output as f64) * 100.0);
+		println!("Różnica rozmiarów: {}%",(len_output as f64 / len_input as f64) * 100.0);
 		println!("------------------------------------------------------");
 
 
