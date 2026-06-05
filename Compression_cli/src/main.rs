@@ -7,7 +7,7 @@
 	
 	use compression_cli::algorithms::traits::CompressionAlgorithm;
 	use compression_cli::algorithms::rle::RleCompression;
-	use compression_cli::algorithms::huffmanTree::HuffmanCompression;
+	use compression_cli::algorithms::huffman_tree::HuffmanCompression;
 
 
 	//Tutaj dodajesz typy kompresowania
