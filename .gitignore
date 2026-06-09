@@ -1,0 +1,10 @@
+
+**/target/
+Compression_cli/target
+
+**/*.rs.bk
+
+
+*.pdb
+
+.DS_Store
