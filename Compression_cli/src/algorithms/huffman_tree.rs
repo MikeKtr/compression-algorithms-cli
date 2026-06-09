@@ -2,7 +2,7 @@ use std::{cmp::Reverse, collections::{BinaryHeap}, io::{BufReader, BufWriter, Re
 use crate::algorithms::traits::{CompressionAlgorithm,ReadSeek};
 use std::collections::HashMap;
 use std::io::{Seek,SeekFrom};
-use crate::algorithms::tree::{TreeNode,create_tree};
+use crate::algorithms::tree::{TreeNode,create_tree,create_q};
 
 
 // Struktura nagłówka
@@ -108,19 +108,7 @@ impl CompressionAlgorithm for HuffmanCompression{
 
 		}
 
-		while pq.len() > 1 {
-			let (Reverse(freq1),left_node) = pq.pop().unwrap();
-			let (Reverse(freq2),right_node) = pq.pop().unwrap();
-			
-			let combined_freq = freq1 + freq2;
-			let parent = TreeNode::Root {
-				freq: combined_freq,
-				left: left_node, 
-				right: right_node,
-			};	
-			pq.push((Reverse(combined_freq) ,Box::new(parent)));
-		}
-		let (Reverse(_total_freq), root_node) = pq.pop().unwrap();
+		let (Reverse(_total_freq), root_node) = create_q(&mut pq);
 
 		let mut current_node : &TreeNode = &root_node;
 		let mut decoded_bytes: u64 = 0;
@@ -133,23 +121,23 @@ impl CompressionAlgorithm for HuffmanCompression{
 				if decoded_bytes == org_file_size {
                     break 'outer;
                 }
-			let current_bit : bool = ((byte >> n) & 1) >= 1;
-			match current_node {
-				TreeNode::Root { freq: _, left, right } => {
-					if current_bit {
-						current_node = &right;
+				let current_bit : bool = ((byte >> n) & 1) >= 1;
+				match current_node {
+					TreeNode::Root { freq: _, left, right } => {
+						if current_bit {
+							current_node = &right;
+						}
+						else{
+							current_node = &left;
+						}
 					}
-					else{
-						current_node = &left;
-					}
+					TreeNode::Leaf { .. } => {}
 				}
-				TreeNode::Leaf { .. } => {}
-			}
-			if let TreeNode::Leaf { byte: sign, .. } = current_node {
-				writer.write_all(&[*sign])?;
-				decoded_bytes += 1;
-				current_node = &root_node; 
-			}
+				if let TreeNode::Leaf { byte: sign, .. } = current_node {
+					writer.write_all(&[*sign])?;
+					decoded_bytes += 1;
+					current_node = &root_node; 
+				}
 			}
 		}
 

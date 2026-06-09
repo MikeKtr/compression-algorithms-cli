@@ -2,19 +2,22 @@
 	use std::path::PathBuf;
 	use clap::{Parser, ValueEnum};
 	use std::fs::File;
-	
+
 	use std::io::Write;
-	
+
 	use compression_cli::algorithms::traits::CompressionAlgorithm;
 	use compression_cli::algorithms::rle::RleCompression;
 	use compression_cli::algorithms::huffman_tree::HuffmanCompression;
+	use compression_cli::algorithms::png::PngCompression;
+
 
 
 	//Tutaj dodajesz typy kompresowania
 	#[derive(ValueEnum,Clone,Debug)]
 	pub enum CompressionAlgo{
 		Rle,
-		HuffmanCompression
+		HuffmanCompression,
+		Png
 	}
 
 	#[derive(Debug,Parser)]
@@ -24,7 +27,7 @@
 
 		#[arg(short,long)]
 		pub output: PathBuf,
-		
+
 		#[arg(short,long)]
 		pub compression_algo : CompressionAlgo,
 
@@ -69,8 +72,17 @@
 					algo.compress(&mut input_file, &mut output_file)?;
 				}
 			}
+			CompressionAlgo::Png =>{
+				let algo = PngCompression;
+				if args.decompress{
+					algo.decompress(&mut input_file, &mut output_file)?;
+				}
+				else{
+					algo.compress(&mut input_file, &mut output_file)?;
+				}
+			}
 		}
-		
+
 		output_file.flush()?;
 
 		let len_input: u64 = get_file_size(&args.input)?;
