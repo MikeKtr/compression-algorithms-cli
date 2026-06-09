@@ -9,52 +9,52 @@ use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
 
-//Tutaj dodajesz typy kompresowania
-#[derive(ValueEnum, Clone, Debug)]
-pub enum CompressionAlgo {
-    Rle,
-    Lzw,
-}
+	use std::path::PathBuf;
+	use clap::{Parser, ValueEnum};
+	use std::fs::File;
 
-#[derive(Debug, Parser)]
-#[command(name = "Compression CLI")]
-pub struct CliArgs {
-    #[command(subcommand)]
-    pub command: Commands,
-}
+	use std::io::Write;
 
-#[derive(Debug, Subcommand)]
-pub enum Commands {
-    File {
-        #[arg(short, long)]
-        input: PathBuf,
+	use compression_cli::algorithms::traits::CompressionAlgorithm;
+	use compression_cli::algorithms::rle::RleCompression;
+	use compression_cli::algorithms::huffman_tree::HuffmanCompression;
+	use compression_cli::algorithms::png::PngCompression;
 
-        #[arg(short, long)]
-        output: PathBuf,
 
-        #[arg(short, long)]
-        compression_algo: CompressionAlgo,
 
-        #[arg(short, long)]
-        decompress: bool,
-    },
-    Audio {
-        #[arg(short, long)]
-        input: PathBuf,
+	//Tutaj dodajesz typy kompresowania
+	#[derive(ValueEnum,Clone,Debug)]
+	pub enum CompressionAlgo{
+		Rle,
+		HuffmanCompression,
+		Png
+	}
 
-        #[arg(short, long)]
-        output: PathBuf,
+	#[derive(Debug,Parser)]
+	pub struct CliArgs{
+		#[arg(short,long)]
+		pub input: PathBuf,
 
-        #[arg(short, long)]
-        compression_algo: CompressionAlgo,
+		#[arg(short,long)]
+		pub output: PathBuf,
 
-        #[arg(short, long)]
-        decompress: bool,
-    },
-}
+		#[arg(short,long)]
+		pub compression_algo : CompressionAlgo,
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let args = CliArgs::parse();
+		#[arg(short,long)]
+		pub decompress : bool,
+	}
+
+
+
+	fn get_file_size(file_path : &std::path::Path) -> Result<u64, std::io::Error>{
+		let md = std::fs::metadata(file_path)?;
+		Ok(md.len())
+	}
+
+	fn main() -> Result<(), Box<dyn std::error::Error>>{
+
+		let args = CliArgs::parse();
 
     match args.command {
         Commands::File {
@@ -67,6 +67,51 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let mut output_file = File::create(&output)?;
 
             // todo!("validacja argumentów");
+
+		match args.compression_algo {
+			CompressionAlgo::Rle => {
+				let algo = RleCompression;
+				if args.decompress{
+					algo.decompress(&mut input_file, &mut output_file)?;
+				}
+				else{
+					algo.compress(&mut input_file, &mut output_file)?;
+				}
+			}
+			CompressionAlgo::HuffmanCompression => {
+				let algo = HuffmanCompression;
+				if args.decompress{
+					algo.decompress(&mut input_file, &mut output_file)?;
+				}
+				else{
+					algo.compress(&mut input_file, &mut output_file)?;
+				}
+			}
+			CompressionAlgo::Png =>{
+				let algo = PngCompression;
+				if args.decompress{
+					algo.decompress(&mut input_file, &mut output_file)?;
+				}
+				else{
+					algo.compress(&mut input_file, &mut output_file)?;
+				}
+			}
+		}
+
+		output_file.flush()?;
+
+		let len_input: u64 = get_file_size(&args.input)?;
+		let len_output: u64 = get_file_size(&args.output)?;
+
+		println!("");
+		println!("------------------------------------------------------");
+
+		println!("Udało się skompresować plik przy użyciu algorytmu {:?}",args.compression_algo);
+		println!("------------------------------------------------------");
+		println!("Początkowy rozmiar pliku: {} b",len_input);
+		println!("Końcowy rozmiar pliku: {} b",len_output);
+		println!("Różnica rozmiarów: {}%",(len_output as f64 / len_input as f64) * 100.0);
+		println!("------------------------------------------------------");
 
             match compression_algo {
                 CompressionAlgo::Rle => {
