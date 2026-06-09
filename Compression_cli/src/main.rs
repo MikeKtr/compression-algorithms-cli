@@ -1,3 +1,13 @@
+use clap::{Parser, Subcommand, ValueEnum};
+use compression_cli::algorithms::lzw::LzwCompression;
+use compression_cli::algorithms::rle::RleCompression;
+use compression_cli::algorithms::traits::CompressionAlgorithm;
+use compression_cli::audio;
+use compression_cli::utils;
+
+use std::fs::File;
+use std::io::Write;
+use std::path::PathBuf;
 
 	use std::path::PathBuf;
 	use clap::{Parser, ValueEnum};
@@ -46,12 +56,17 @@
 
 		let args = CliArgs::parse();
 
-		let mut input_file = File::open(&args.input)?;
-		let mut output_file = File::create(&args.output)?;
+    match args.command {
+        Commands::File {
+            input,
+            output,
+            compression_algo,
+            decompress,
+        } => {
+            let mut input_file = File::open(&input)?;
+            let mut output_file = File::create(&output)?;
 
-
-
-		// todo!("validacja argumentów");
+            // todo!("validacja argumentów");
 
 		match args.compression_algo {
 			CompressionAlgo::Rle => {
@@ -98,6 +113,46 @@
 		println!("Różnica rozmiarów: {}%",(len_output as f64 / len_input as f64) * 100.0);
 		println!("------------------------------------------------------");
 
+            match compression_algo {
+                CompressionAlgo::Rle => {
+                    let algo = RleCompression;
+                    if decompress {
+                        algo.decompress(&mut input_file, &mut output_file)?;
+                    } else {
+                        algo.compress(&mut input_file, &mut output_file)?;
+                    }
+                }
+                CompressionAlgo::Lzw => {
+                    let algo = LzwCompression;
+                    if decompress {
+                        algo.decompress(&mut input_file, &mut output_file)?;
+                    } else {
+                        algo.compress(&mut input_file, &mut output_file)?;
+                    }
+                }
+            }
 
-		Ok(())
-	}
+            output_file.flush()?;
+            if !decompress {
+                utils::print_stats(&input, &output, Some(&format!("{:?}", compression_algo)));
+            }
+        }
+        Commands::Audio {
+            input,
+            output,
+            compression_algo,
+            decompress,
+        } => match compression_algo {
+            CompressionAlgo::Rle => {
+                let algo = RleCompression;
+                audio::process_audio(&input, &output, decompress, &algo);
+            }
+            CompressionAlgo::Lzw => {
+                let algo = LzwCompression;
+                audio::process_audio(&input, &output, decompress, &algo);
+            }
+        },
+    }
+
+    Ok(())
+}
