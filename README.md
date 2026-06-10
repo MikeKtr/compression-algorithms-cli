@@ -21,12 +21,6 @@ Projekt charakteryzuje się modułową i rozszerzalną architekturą, co pozwala
 Do uruchomienia projektu wymagane jest środowisko programistyczne języka Rust (**Cargo**).
 
 ```bash
-# Sklonuj repozytorium
-git clone [https://github.com/MikeKtr/compression-algorithms-cli.git](https://github.com/MikeKtr/compression-algorithms-cli.git)
-
-# Przejdź do katalogu projektu
-cd compression-algorithms-cli
-
 # Kompresja pliku tekstowego przy użyciu drzewa Huffmana
 cargo run -- file --input shakespiere.txt --output sko.txt --compression-algo huffmanTree
 
