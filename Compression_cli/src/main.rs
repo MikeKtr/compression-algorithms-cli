@@ -1,10 +1,11 @@
 use clap::{Parser, Subcommand, ValueEnum};
 use compression_cli::algorithms::huffman_tree::HuffmanCompression;
 use compression_cli::algorithms::lzw::LzwCompression;
-use compression_cli::algorithms::png::PngCompression;
 use compression_cli::algorithms::rle::RleCompression;
 use compression_cli::algorithms::traits::CompressionAlgorithm;
 use compression_cli::audio;
+use compression_cli::image;
+use compression_cli::image::png::PngCompression;
 use compression_cli::utils;
 
 use std::fs::File;
@@ -20,17 +21,26 @@ pub enum CompressionAlgo {
 }
 
 #[derive(Subcommand, Debug)]
-enum Commands {
+pub enum Commands {
     File {
         input: PathBuf,
         output: PathBuf,
         compression_algo: CompressionAlgo,
+        #[arg(short, long, default_value_t = false)]
         decompress: bool,
     },
     Audio {
         input: PathBuf,
         output: PathBuf,
         compression_algo: CompressionAlgo,
+        #[arg(short, long, default_value_t = false)]
+        decompress: bool,
+    },
+    Image {
+        input: PathBuf,
+        output: PathBuf,
+        compression_algo: CompressionAlgo,
+        #[arg(short, long, default_value_t = false)]
         decompress: bool,
     },
 }
@@ -85,6 +95,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 CompressionAlgo::Png => &PngCompression,
             };
             audio::process_audio(&input, &output, decompress, algo);
+        }
+
+        Commands::Image {
+            input,
+            output,
+            compression_algo,
+            decompress,
+        } => {
+            let algo: &dyn CompressionAlgorithm = match compression_algo {
+                CompressionAlgo::Rle => &RleCompression,
+                CompressionAlgo::HuffmanCompression => &HuffmanCompression,
+                CompressionAlgo::Lzw => &LzwCompression,
+                CompressionAlgo::Png => &PngCompression,
+            };
+            image::process_image(&input, &output, decompress, algo)?;
         }
     }
 
