@@ -39,7 +39,6 @@ pub enum Commands {
     Image {
         input: PathBuf,
         output: PathBuf,
-        compression_algo: CompressionAlgo,
         #[arg(short, long, default_value_t = false)]
         decompress: bool,
     },
@@ -100,15 +99,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Commands::Image {
             input,
             output,
-            compression_algo,
             decompress,
         } => {
-            let algo: &dyn CompressionAlgorithm = match compression_algo {
-                CompressionAlgo::Rle => &RleCompression,
-                CompressionAlgo::HuffmanCompression => &HuffmanCompression,
-                CompressionAlgo::Lzw => &LzwCompression,
-                CompressionAlgo::Png => &PngCompression,
-            };
+            let algo = &PngCompression;
             image::process_image(&input, &output, decompress, algo)?;
         }
     }
