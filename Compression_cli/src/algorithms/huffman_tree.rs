@@ -97,9 +97,15 @@ impl CompressionAlgorithm for HuffmanCompression {
         let _ = reader.read_exact(&mut org_sign_count_buf);
         let org_sign_count = u8::from_le_bytes(org_sign_count_buf);
 
+        let loop_count = if org_sign_count == 0 {
+            256
+        } else {
+            org_sign_count as usize
+        };
+
         let mut pq = BinaryHeap::new();
 
-        for _ in 0..org_sign_count {
+        for _ in 0..loop_count {
             let mut sign_buf = [0; 1];
             let mut freq_buf = [0; 8];
 
