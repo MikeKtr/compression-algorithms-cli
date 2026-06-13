@@ -13,32 +13,35 @@ impl CompressionAlgorithm for LzwCompression {
         let source_reader = std::io::BufReader::new(source);
         let mut writer = BufWriter::new(destination);
 
-        let mut dict: HashMap<Vec<u8>, u32> = HashMap::new();
-        for i in 0u32..256 {
-            dict.insert(vec![i as u8], i);
-        }
-        let mut next_dict_val: u32 = 256;
-        let mut current: Vec<u8> = Vec::new();
+        let mut dict: HashMap<(u16, u8), u16> = HashMap::new();
+        let mut next_code: u16 = 256;
+        let max_code: u16 = 65535;
+
+        let mut current_prefix: Option<u16> = None;
 
         for byte_result in source_reader.bytes() {
-            let byte = byte_result?;
-            let mut extended = current.clone();
-            extended.push(byte);
-            if dict.contains_key(&extended) {
-                current = extended;
+            let k = byte_result?;
+
+            if let Some(w) = current_prefix {
+                if let Some(&code) = dict.get(&(w, k)) {
+                    current_prefix = Some(code);
+                } else {
+                    writer.write_all(&w.to_le_bytes())?;
+                    if next_code < max_code {
+                        dict.insert((w, k), next_code);
+                        next_code += 1;
+                    }
+                    current_prefix = Some(k as u16);
+                }
             } else {
-                let code = *dict.get(&current).unwrap();
-                writer.write_all(&code.to_le_bytes())?;
-                dict.insert(extended, next_dict_val);
-                next_dict_val += 1;
-                current = vec![byte];
+                current_prefix = Some(k as u16);
             }
         }
 
-        if !current.is_empty() {
-            let code = *dict.get(&current).unwrap();
-            writer.write_all(&code.to_le_bytes())?;
+        if let Some(w) = current_prefix {
+            writer.write_all(&w.to_le_bytes())?;
         }
+
         writer.flush()?;
         Ok(())
     }
@@ -49,31 +52,54 @@ impl CompressionAlgorithm for LzwCompression {
         destination: &mut dyn Write,
     ) -> std::io::Result<()> {
         let mut writer = BufWriter::new(destination);
-        let mut dict: Vec<Vec<u8>> = (0u32..256).map(|i| vec![i as u8]).collect();
 
-        let mut buf = [0u8; 4];
+        let mut dict: Vec<Vec<u8>> = (0u32..256).map(|i| vec![i as u8]).collect();
+        let max_code: usize = 65535;
+
+        let mut buf = [0u8; 2];
+
         if source.read_exact(&mut buf).is_err() {
             return Ok(());
         }
-        let first_code = u32::from_le_bytes(buf);
-        let mut previous = dict[first_code as usize].clone();
+
+        let first_code = u16::from_le_bytes(buf) as usize;
+        if first_code >= dict.len() {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                "Wrong lzw file",
+            ));
+        }
+
+        let mut previous = dict[first_code].clone();
         writer.write_all(&previous)?;
 
-        while let Ok(_) = source.read_exact(&mut buf) {
-            let code = u32::from_le_bytes(buf);
-            let entry = if (code as usize) < dict.len() {
-                dict[code as usize].clone()
-            } else {
+        while source.read_exact(&mut buf).is_ok() {
+            let code = u16::from_le_bytes(buf) as usize;
+
+            let entry = if code < dict.len() {
+                dict[code].clone()
+            } else if code == dict.len() {
                 let mut entry = previous.clone();
                 entry.push(previous[0]);
                 entry
+            } else {
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    "Corrupted file",
+                ));
             };
+
             writer.write_all(&entry)?;
-            let mut new_entry = previous.clone();
-            new_entry.push(entry[0]);
-            dict.push(new_entry);
+
+            if dict.len() < max_code {
+                let mut new_entry = previous.clone();
+                new_entry.push(entry[0]);
+                dict.push(new_entry);
+            }
+
             previous = entry;
         }
+
         writer.flush()?;
         Ok(())
     }
