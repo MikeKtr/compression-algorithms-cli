@@ -1,7 +1,5 @@
+pub mod huffman_tree;
 pub mod lzw;
 pub mod rle;
 pub mod traits;
-pub mod huffman_tree;
-pub mod png;
 pub mod tree;
-pub mod filter_reader;
