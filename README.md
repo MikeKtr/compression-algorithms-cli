@@ -112,14 +112,12 @@ cargo test
 
     - Inferencja typów: Zaawansowane wnioskowanie typów przez kompilator.
 
+    - Cechy: Dzięki uzyciu jednej wspólnej cechy `CompressionAlgorithm` główny program nie musi znać szczegółów każdego algorytmu z osobna – wystarczy, że wie, iż na każdym z nich można wywołać operację `compress` i `decompress`. Bardzo ułatwiło to dodawanie kolejnych algorytmów, a takze pozwala na potencjalne rozszerzenie programu w przyszłości
+
+    - Gotowe biblioteki: Dzięki bibliotece `clap`, tworzenie menu komend było proste. Rust wygenerował za nas bezpieczny interfejs obsługujący wszystkie argumenty i automatycznie dodał panel pomocy (`--help`). Innymi bibliotekami wykorzystywanymi w projekcie są np: `hound`, który ułatwia odczyt plików wav, czy `textplots` który pozwolił na narysowanie sygnału audio w ASCII
+
+    - Operator "?": prz. ` reader.read_exact(&mut file_hdr)?;`. Słuzy on do szybkiego propagowania błędów wyzej, zamiast pisania dodatkowych instrukcji warunkowych
+
 ### Co stanowiło największe wyzwanie?
 
     - Rygorystyczny system prawa własności (Ownership) przy operacjach I/O.
-
-```
-
-```
-
-```
-
-```
