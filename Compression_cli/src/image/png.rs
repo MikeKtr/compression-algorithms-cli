@@ -115,7 +115,7 @@ impl CompressionAlgorithm for PngCompression {
 
         let mut org_img_length_buf = [0; 4];
         reader.read_exact(&mut org_img_length_buf)?;
-        let org_img_length = u32::from_le_bytes(org_img_length_buf);
+        let _org_img_length = u32::from_le_bytes(org_img_length_buf);
 
         let mut org_img_width_buf = [0; 4];
         reader.read_exact(&mut org_img_width_buf)?;
