@@ -4,6 +4,7 @@ mod tests {
     use compression_cli::algorithms::lzw::LzwCompression;
     use compression_cli::algorithms::rle::RleCompression;
     use compression_cli::algorithms::traits::CompressionAlgorithm;
+    use compression_cli::image::png::PngCompression;
 
     use std::fs;
     use std::io::Cursor;
@@ -43,5 +44,10 @@ mod tests {
     #[test]
     fn test_rle_shakespire() {
         test_roundtrip(&RleCompression, "shakespire.txt");
+    }
+
+    #[test]
+    fn test_png_bmp() {
+        test_roundtrip(&PngCompression, "greenland_grid_velo.bmp");
     }
 }
