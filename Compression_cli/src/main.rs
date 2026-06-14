@@ -42,6 +42,9 @@ pub enum Commands {
         #[arg(short, long, default_value_t = false)]
         decompress: bool,
     },
+    Explain {
+        compression_algo: CompressionAlgo,
+    },
 }
 
 #[derive(Parser, Debug)]
@@ -103,6 +106,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         } => {
             let algo = &PngCompression;
             image::process_image(&input, &output, decompress, algo)?;
+        }
+
+        Commands::Explain { compression_algo } => {
+            let algo: &dyn CompressionAlgorithm = match compression_algo {
+                CompressionAlgo::Rle => &RleCompression,
+                CompressionAlgo::HuffmanCompression => &HuffmanCompression,
+                CompressionAlgo::Lzw => &LzwCompression,
+                CompressionAlgo::Png => &PngCompression,
+            };
+
+            println!("\n=== {} ===", algo.name());
+            println!("{}\n", algo.description());
         }
     }
 
