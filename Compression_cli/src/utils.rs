@@ -27,7 +27,7 @@ pub fn print_stats(input: &Path, output: &Path, compression_algo: Option<&str>) 
     if len_input > 0 {
         let percent = (len_output as f64 / len_input as f64) * 100.0;
         let reduced = 100.0 - percent;
-        println!("Rozmiar po kompresji:     {:.2}% oryginału", percent);
+        println!("Rozmiar po operacji:     {:.2}% oryginału", percent);
         println!("Zredukowano o:            {:.2}%", reduced);
     }
     println!("------------------------------------------------------");
