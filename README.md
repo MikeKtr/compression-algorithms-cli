@@ -94,6 +94,16 @@ cargo run audio audio.wav c_sample.lzw lzw
 
 ```
 
+Poza komendami które wykonują algorytmy, została równiez dodana komenda `explain`, która pozwala zrozumieć ogólną ideę danego algorytmu
+
+```bash
+cargo run explain rle
+
+=== Rle Compression ===
+Compresses data by replacing consecutive identical bytes with a [count, value] pair.
+Example: 'AAAAABBB' is compressed into [5, 'A', 3, 'B']
+```
+
 ## Uruchamianie testów
 
 Projekt zawiera zestaw testów sprawdzających poprawność kompresji i dekompresji róznych algorytmów

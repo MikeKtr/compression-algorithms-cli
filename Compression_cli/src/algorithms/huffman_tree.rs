@@ -162,4 +162,7 @@ impl CompressionAlgorithm for HuffmanCompression {
     fn name(&self) -> &'static str {
         "Huffman Compression Algorithm"
     }
+    fn description(&self) -> &'static str {
+        "Huffman Coding:\n A statistical algorithm that assigns shorter bit-lengths to frequent characters and longer ones to rare characters.\nExample: If 'E' appears 1000 times, it might get a 2-bit code ('01'). If 'X' appears once, it gets a 9-bit code ('110100111').\n"
+    }
 }

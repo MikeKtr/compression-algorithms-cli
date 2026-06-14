@@ -107,4 +107,8 @@ impl CompressionAlgorithm for LzwCompression {
     fn name(&self) -> &'static str {
         "LZW Compression"
     }
+
+    fn description(&self) -> &'static str {
+        "Lempel-Ziv-Welch (LZW):\n A dictionary-based algorithm that dynamically maps repeating sequences to 16-bit codes.\n Example: In 'TOBEORNOTTOBE', the second 'TOBE' is already in the dictionary and gets replaced by a single short code"
+    }
 }

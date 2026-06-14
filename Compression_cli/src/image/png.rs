@@ -201,4 +201,8 @@ impl CompressionAlgorithm for PngCompression {
     fn name(&self) -> &'static str {
         "Png Compression"
     }
+
+    fn description(&self) -> &'static str {
+        "PNG Compression: Applies a spatial 'Average' prediction filter to image rows, then compresses the residuals using Huffman coding."
+    }
 }

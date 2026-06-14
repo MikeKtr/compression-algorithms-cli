@@ -64,4 +64,8 @@ impl CompressionAlgorithm for RleCompression {
     fn name(&self) -> &'static str {
         "Rle Compression"
     }
+
+    fn description(&self) -> &'static str {
+        "Compresses data by replacing consecutive identical bytes with a [count, value] pair.\nExample: 'AAAAABBB' is compressed into [5, 'A', 3, 'B']"
+    }
 }
