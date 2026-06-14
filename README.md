@@ -94,6 +94,16 @@ cargo run audio audio.wav c_sample.lzw lzw
 
 ```
 
+## Uruchamianie testów
+
+Projekt zawiera zestaw testów sprawdzających poprawność kompresji i dekompresji róznych algorytmów
+
+Uruchomienie testów:
+
+```bash
+cargo test
+```
+
 ## Refleksje nad językiem Rust
 
 ### Co ułatwiło implementację?
@@ -105,6 +115,10 @@ cargo run audio audio.wav c_sample.lzw lzw
 ### Co stanowiło największe wyzwanie?
 
     - Rygorystyczny system prawa własności (Ownership) przy operacjach I/O.
+
+```
+
+```
 
 ```
 
