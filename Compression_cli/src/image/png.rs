@@ -199,6 +199,6 @@ impl CompressionAlgorithm for PngCompression {
     }
 
     fn name(&self) -> &'static str {
-        "BMP Compression (using PNG-like filtering)"
+        "Png Compression"
     }
 }
