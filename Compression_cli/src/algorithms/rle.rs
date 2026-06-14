@@ -1,62 +1,67 @@
-use std::io::{Read,Write,BufReader,BufWriter};
-use crate::algorithms::traits::{CompressionAlgorithm,ReadSeek};
-
+use crate::algorithms::traits::{CompressionAlgorithm, ReadSeek};
+use std::io::{BufReader, BufWriter, Read, Write};
 
 pub struct RleCompression;
 
-impl CompressionAlgorithm for RleCompression{
+impl CompressionAlgorithm for RleCompression {
+    fn compress(
+        &self,
+        source: &mut dyn ReadSeek,
+        destination: &mut dyn Write,
+    ) -> std::io::Result<()> {
+        let reader = BufReader::new(source);
+        let mut writer = BufWriter::new(destination);
 
-	fn compress(&self,source: &mut dyn ReadSeek,destination : &mut dyn Write) -> std::io::Result<()>{
-		let reader = BufReader::new(source);
-		let mut writer = BufWriter::new(destination);
+        let mut current_byte: Option<u8> = None;
+        let mut counter: u8 = 0;
 
-		let mut current_byte : Option<u8> = None;
-		let mut counter : u8 = 0;
+        for byte_read in reader.bytes() {
+            let byte = byte_read?;
+            if current_byte.is_none() || current_byte == Some(byte) {
+                counter += 1;
+                if counter == 255 {
+                    writer.write_all(&[counter, byte])?;
+                    counter = 0;
+                    current_byte = None;
+                    continue;
+                }
+            } else {
+                if let Some(raw_byte) = current_byte {
+                    writer.write_all(&[counter, raw_byte])?;
+                }
+                counter = 1;
+            }
+            current_byte = Some(byte);
+        }
+        if let Some(raw_byte) = current_byte {
+            writer.write_all(&[counter, raw_byte])?;
+        }
+        writer.flush()?;
+        Ok(())
+    }
 
-		for byte_read in reader.bytes() {
-			let byte = byte_read?;
-			if current_byte == None || current_byte == Some(byte) {
-				counter += 1;
-				if counter == 255 {
-					writer.write_all(&[counter, byte])?;
-					counter = 0;
-					current_byte = None;
-					continue; 
-				}
-			} else {
-				if let Some(raw_byte) = current_byte {
-					writer.write_all(&[counter, raw_byte])?;
-				}
-				counter = 1;
-			}
-			current_byte = Some(byte);
-		}
-		if let Some(raw_byte) = current_byte {
-			writer.write_all(&[counter, raw_byte])?;
-		}
-		writer.flush()?;
-		Ok(())
-	}
+    fn decompress(
+        &self,
+        source: &mut dyn ReadSeek,
+        destination: &mut dyn Write,
+    ) -> std::io::Result<()> {
+        let mut reader = BufReader::new(source);
+        let mut writer = BufWriter::new(destination);
 
-	fn decompress(&self,source: &mut dyn  ReadSeek, destination : &mut dyn Write) -> std::io::Result<()>{
-		let mut reader = BufReader::new(source);
-		let mut writer = BufWriter::new(destination);
+        let mut buffer = [0u8; 2];
 
-		let mut buffer = [0u8;2];
+        while reader.read_exact(&mut buffer).is_ok() {
+            let number_byte = buffer[0];
+            let letter_byte = buffer[1];
 
-		while reader.read_exact(&mut buffer).is_ok(){
-			let number_byte = buffer[0];
-			let letter_byte = buffer[1];
-			
-			for _i in 0..number_byte{
-				let _ = writer.write_all(&[letter_byte]);
-			}
+            for _i in 0..number_byte {
+                let _ = writer.write_all(&[letter_byte]);
+            }
+        }
+        Ok(())
+    }
 
-		}
-		Ok(())
-	}
-
-	fn name(&self) -> &'static str {
-		return "Rle Compression";
-	}
+    fn name(&self) -> &'static str {
+        "Rle Compression"
+    }
 }
