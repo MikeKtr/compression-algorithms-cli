@@ -49,6 +49,8 @@ impl CompressionAlgorithm for PngCompression {
         writer.write_all(&[char_count as u8])?;
         writer.write_all(&img_length.to_le_bytes())?;
         writer.write_all(&img_width.to_le_bytes())?;
+        writer.write_all(&file_header)?;
+        writer.write_all(&img_header)?;
 
         for i in 0..256 {
             if counted_bytes[i] > 0 {
@@ -104,7 +106,12 @@ impl CompressionAlgorithm for PngCompression {
 
         let mut org_sign_count_buf = [0; 1];
         reader.read_exact(&mut org_sign_count_buf)?;
-        let org_sign_count = u8::from_le_bytes(org_sign_count_buf);
+        let org_sign_count = org_sign_count_buf[0];
+        let loops = if org_sign_count == 0 {
+            256
+        } else {
+            org_sign_count as usize
+        };
 
         let mut org_img_length_buf = [0; 4];
         reader.read_exact(&mut org_img_length_buf)?;
@@ -114,14 +121,21 @@ impl CompressionAlgorithm for PngCompression {
         reader.read_exact(&mut org_img_width_buf)?;
         let org_img_width = u32::from_le_bytes(org_img_width_buf);
 
+        let mut file_hdr = [0u8; 14];
+        let mut info_hdr = [0u8; 40];
+        reader.read_exact(&mut file_hdr)?;
+        reader.read_exact(&mut info_hdr)?;
+        writer.write_all(&file_hdr)?;
+        writer.write_all(&info_hdr)?;
+
         let mut pq = BinaryHeap::new();
 
-        for _ in 0..org_sign_count {
+        for _ in 0..loops {
             let mut sign_buf = [0; 1];
             let mut freq_buf = [0; 8];
             reader.read_exact(&mut sign_buf)?;
             reader.read_exact(&mut freq_buf)?;
-            let sign = u8::from_le_bytes(sign_buf);
+            let sign = sign_buf[0];
             let freq = u64::from_le_bytes(freq_buf);
             let leaf = TreeNode::Leaf { byte: sign, freq };
             pq.push((Reverse(freq), Box::new(leaf)));
@@ -129,22 +143,7 @@ impl CompressionAlgorithm for PngCompression {
 
         let (Reverse(_total_freq), root_node) = create_q(&mut pq);
 
-        // Nagłówek BMP
-        let mut file_hdr = [0u8; 14];
-        file_hdr[0] = b'B';
-        file_hdr[1] = b'M';
-        file_hdr[10..14].copy_from_slice(&54i32.to_le_bytes());
-
-        let mut info_hdr = [0u8; 40];
-        info_hdr[0..4].copy_from_slice(&40i32.to_le_bytes());
-        info_hdr[4..8].copy_from_slice(&(org_img_width as i32).to_le_bytes());
-        info_hdr[8..12].copy_from_slice(&(org_img_length as i32).to_le_bytes());
-        info_hdr[12..14].copy_from_slice(&1u16.to_le_bytes());
-        info_hdr[14..16].copy_from_slice(&24u16.to_le_bytes());
-        writer.write_all(&file_hdr)?;
-        writer.write_all(&info_hdr)?;
-
-        let mut current_node: &TreeNode = &*root_node; // ważne: &* zamienia Box<TreeNode> na &TreeNode
+        let mut current_node: &TreeNode = &*root_node;
         let mut decoded_bytes = 0;
 
         let mut prev_reconstructed_line = vec![0u8; (org_img_width * 3) as usize];
@@ -172,7 +171,7 @@ impl CompressionAlgorithm for PngCompression {
                     raw_line[curr_index] = *sign;
                     curr_index += 1;
                     decoded_bytes += 1;
-                    current_node = &*root_node; // wracamy do korzenia
+                    current_node = &*root_node;
 
                     if curr_index == raw_line.len() {
                         let mut bmp_line = vec![0u8; org_img_width as usize * 3];
