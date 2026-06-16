@@ -70,7 +70,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let algo: &dyn CompressionAlgorithm = match compression_algo {
                 CompressionAlgo::Rle => &RleCompression,
                 CompressionAlgo::HuffmanCompression => &HuffmanCompression,
-                CompressionAlgo::Png => &PngCompression,
+                CompressionAlgo::Png => {
+                    return Err(
+                        "Use 'image' command instead of 'file' to use PNG compression".into(),
+                    );
+                }
                 CompressionAlgo::Lzw => &LzwCompression,
             };
 
@@ -94,7 +98,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 CompressionAlgo::Rle => &RleCompression,
                 CompressionAlgo::Lzw => &LzwCompression,
                 CompressionAlgo::HuffmanCompression => &HuffmanCompression,
-                CompressionAlgo::Png => &PngCompression,
+                CompressionAlgo::Png => {
+                    return Err(
+                        "Use 'image' command instead of 'audio' to use PNG compression".into(),
+                    );
+                }
             };
             audio::process_audio(&input, &output, decompress, algo);
         }
